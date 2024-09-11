@@ -4,7 +4,7 @@ import Layout from "./components/Layout/Layout";
 import Products from "./components/Shop/Products";
 import { useEffect } from "react";
 import Notification from "./components/UI/Notification";
-import { uiActions } from "./components/store/ui-slice";
+import { sendCartData, fetchCartData } from "./components/store/cart-actions";
 
 let isInitial = true;
 
@@ -15,50 +15,18 @@ function App() {
   const cart = useSelector((state) => state.cart);
 
   useEffect(() => {
-    async function fetchData() {
-      dispatch(
-        uiActions.showNotification({
-          status: "pending",
-          title: "Sending...",
-          message: "Sending cart data!",
-        })
-      );
-      try {
-        const response = await fetch(
-          "https://react-http-13ce3-default-rtdb.firebaseio.com/cart.json",
-          {
-            method: "PUT",
-            body: JSON.stringify(cart),
-          }
-        );
-        if (!response.ok) {
-          throw new Error("Sending cart data failed.");
-        }
+    dispatch(fetchCartData());
+  }, [dispatch]);
 
-        dispatch(
-          uiActions.showNotification({
-            status: "success",
-            title: "Success!",
-            message: "Sent cart data successfully!",
-          })
-        );
-      } catch (error) {
-        dispatch(
-          uiActions.showNotification({
-            status: "error",
-            title: "Error!",
-            message: "Sending cart data failed!",
-          })
-        );
-      }
-    }
 
+  useEffect(() => {
     if (isInitial) {
       isInitial = false;
       return;
     }
-
-    fetchData();
+    if (cart.changed) {
+      dispatch(sendCartData(cart));
+    }
   }, [cart, dispatch]);
 
   return (
